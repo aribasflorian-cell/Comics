@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Ma wishlist de comics</title>
+<style>
+:root{--bg:#f6f6f7;--surface:#fff;--ink:#18181b;--muted:#6b7280;--line:#e4e4e7;--acc:#2f5fd0;--on-acc:#fff}
+@media (prefers-color-scheme:dark){:root{--bg:#101114;--surface:#18191d;--ink:#ececf0;--muted:#9a9aa5;--line:#2a2b31;--acc:#7aa2ff;--on-acc:#0b1020}}
+*{box-sizing:border-box}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+body{margin:0;background:var(--bg);color:var(--ink);font:400 16px/1.45 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;padding:env(safe-area-inset-top,0px) 0 env(safe-area-inset-bottom,0px)}
+.wrap{max-width:1000px;margin:0 auto;padding:22px 16px 60px}
+.top{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;margin-bottom:6px}
+h1{font-size:26px;line-height:1.15;font-weight:650;margin:0;letter-spacing:-.01em}
+h2,h3{font-weight:600}
+.sub{color:var(--muted);margin:2px 0 18px;font-size:15px}
+button{font:500 15px system-ui,sans-serif;color:var(--on-acc);background:var(--acc);border:1px solid transparent;border-radius:8px;padding:8px 14px;min-height:44px;cursor:pointer}
+button:active{opacity:.85}
+button.ghost{background:transparent;color:var(--ink);border-color:var(--line)}
+button.danger{color:#c2410c}
+.seg{display:flex;background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:3px;margin-bottom:12px}
+.seg button{flex:1;background:transparent;color:var(--muted);min-height:38px;padding:4px 8px;font-size:14px;white-space:nowrap}
+.seg button[aria-pressed="true"]{background:var(--acc);color:var(--on-acc)}
+.bar{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:20px}
+input,select,textarea{width:100%;font:inherit;color:var(--ink);background:var(--surface);border:1px solid var(--line);border-radius:8px;padding:9px 11px;min-height:44px}
+textarea{min-height:64px;resize:vertical}
+.bar input{flex:1 1 100%;width:auto}.bar select{flex:1 1 140px;width:auto}
+:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
+label{display:block;font-size:13px;color:var(--muted);margin-bottom:4px}
+.list{display:grid;grid-template-columns:repeat(auto-fill,minmax(145px,1fr));gap:22px 14px}
+.card{min-width:0}
+.poster{position:relative;display:block;width:100%;aspect-ratio:2/3;border:1px solid var(--line);border-radius:8px;overflow:hidden;background:var(--surface);cursor:pointer;padding:0;box-shadow:0 1px 3px rgba(0,0,0,.12)}
+.poster img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
+.gen{position:absolute;inset:0;display:flex;flex-direction:column;justify-content:space-between;padding:12px;text-align:left;background:var(--surface);color:var(--ink)}
+.gen b{font-size:15px;line-height:1.25;font-weight:600}
+.gen i{font-style:normal;font-size:12px;color:var(--muted)}
+.tag{position:absolute;top:8px;left:8px;font-size:11px;font-weight:600;border-radius:99px;padding:2px 8px;background:rgba(0,0,0,.65);color:#fff}
+.owned .poster img,.owned .gen{opacity:.55}
+.done{position:absolute;right:8px;bottom:8px;font-size:11px;font-weight:600;border-radius:99px;padding:2px 8px;background:#15803d;color:#fff}
+.card h3{font-size:14px;line-height:1.3;margin:9px 0 2px;overflow-wrap:anywhere}
+.meta{color:var(--muted);font-size:13px}
+dialog{border:1px solid var(--line);border-radius:14px;background:var(--surface);color:var(--ink);padding:18px;width:min(540px,94vw);max-height:92vh}
+dialog::backdrop{background:rgba(0,0,0,.5)}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px}
+.full{grid-column:1/-1}
+.row{display:flex;gap:8px;flex-wrap:wrap;margin-top:14px}
+.det{display:flex;gap:16px}.det .poster{flex:0 0 120px;width:120px;cursor:default}
+.det p{margin:4px 0;overflow-wrap:anywhere}
+.empty{grid-column:1/-1;text-align:center;padding:40px 12px;border:1px dashed var(--line);border-radius:10px;color:var(--muted)}
+a{color:var(--acc)}
+.foot{margin-top:36px}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="top"><h1>Ma wishlist de comics</h1><button id="add">Ajouter</button></div>
+  <p class="sub" id="stats"></p>
+  <div class="seg" id="tabs" role="group" aria-label="Statut">
+    <button data-s="want" aria-pressed="true">À acheter</button>
+    <button data-s="owned" aria-pressed="false">Collection</button>
+    <button data-s="all" aria-pressed="false">Tout</button>
+  </div>
+  <div class="bar">
+    <input id="q" type="search" placeholder="Rechercher un titre, un auteur…" aria-label="Rechercher">
+    <select id="uni" aria-label="Univers"><option value="">Tous les univers</option><option>DC</option><option>Marvel</option><option>Autre</option></select>
+    <select id="sort" aria-label="Trier"><option value="prio">Priorité</option><option value="new">Plus récent</option><option value="title">Titre A–Z</option></select>
+  </div>
+  <div class="list" id="list"></div>
+  <div class="foot"><button class="ghost" id="reset">Remettre la liste de départ</button></div>
+</div>
+<input id="qf" type="file" accept="image/*" hidden>
+
+<dialog id="dView"><div id="viewBody"></div></dialog>
+
+<dialog id="dForm">
+  <h2 id="fTitle" style="margin:0 0 12px;font-size:20px">Ajouter un comic</h2>
+  <div class="grid">
+    <div class="full"><label for="t">Titre *</label><input id="t"></div>
+    <div><label for="u">Univers</label><select id="u"><option>DC</option><option>Marvel</option><option>Autre</option></select></div>
+    <div><label for="p">Priorité</label><select id="p"><option value="3">Haute</option><option value="2" selected>Moyenne</option><option value="1">Basse</option></select></div>
+    <div><label for="a">Auteur / dessinateur</label><input id="a"></div>
+    <div><label for="e">Éditeur</label><input id="e"></div>
+    <div><label for="pr">Prix (€)</label><input id="pr" type="number" min="0" step="0.01" inputmode="decimal"></div>
+    <div><label for="i">ISBN</label><input id="i" inputmode="numeric"></div>
+    <div class="full"><label for="cu">Adresse de la couverture (lien image)</label><input id="cu" type="url" placeholder="https://…"></div>
+    <div class="full"><label for="cf">… ou une image de ta galerie</label><input id="cf" type="file" accept="image/*"></div>
+    <div class="full"><label for="l">Lien (fiche éditeur, boutique)</label><input id="l" type="url" placeholder="https://…"></div>
+    <div class="full"><label for="n">Note</label><textarea id="n"></textarea></div>
+  </div>
+  <div class="row"><button id="save">Enregistrer</button><button class="ghost" id="cancel">Annuler</button></div>
+</dialog>
+
+<script>
+(function(){
+  var KEY="comics-wishlist-v2", NS="DC", NM="Marvel", PU="Urban Comics", PP="Panini Comics";
+  var BD="https://bdi.dlpdomain.com/album/", BF="https://www.bdfugue.com/media/catalog/product/cache/0d950bd4d3aaddc02a824ea154d9c41e/9/7/";
+  function S(id,title,u,pub,isbn,cover,prio,note,link,owned,price){return{id:id,title:title,universe:u,author:"",publisher:pub,isbn:isbn||"",cover:cover||"",prio:prio,note:note||"",link:link||"",bought:!!owned,price:price||""}}
+  var SEED=[
+    S(1,"Absolute Power – Tome 1",NS,PU,"9791026820048",BD+"9791026820048/couv/M385x862/absolute-power-tome-1.jpg",3,"Amanda Waller lance son offensive contre les héros dotés de pouvoirs.","https://www.urban-comics.com/produit/absolute-power-tome-1/"),
+    S(2,"Absolute Power – Tome 2",NS,PU,"9791026822837",BD+"9791026822837/couv/M385x862/absolute-power-tome-2.jpg",3,"Les héros acculés se replient sur Themyscira.","https://www.urban-comics.com/absolute-power-tome-2/"),
+    S(3,"Absolute Power – Tome 3",NS,PU,"9791026820727",BD+"9791026820727/couv/M385x862/absolute-power-tome-3.jpg",3,"Le dernier acte contre Amanda Waller.","https://www.urban-comics.com/absolute-power-serie/"),
+    S(4,"Justice League Unlimited – Tome 1",NS,PU,"9791026824381",BD+"9791026824381/couv/M385x862/justice-league-unlimited-tome-1.jpg",3,"Contient DC All In Special #1 : le pivot vers l’univers Absolute.","https://www.urban-comics.com/justice-league-unlimited-tome-1/"),
+    S(5,"Absolute Wonder Woman – Tome 1",NS,PU,"9791026823407",BD+"9791026823407/couv/M385x862/absolute-wonder-woman-tome-1.jpg",2,"Diana, exilée aux Enfers, sans l’île des Amazones."),
+    S(6,"Absolute Batman – Tome 1",NS,PU,"","https://static.bdbase.fr/images/books/webp/68/couvertures/331068.webp",2,"Une version plus brutale de Bruce Wayne.","",true),
+    S(7,"Absolute Flash – Tome 1",NS,PU,"","https://static.bdbase.fr/images/books/71/couvertures/335471.webp",2,"Wally West et des pouvoirs qu’il ne maîtrise pas.","",true),
+    S(8,"Ultimate Spider-Man – Tome 1 : Mariés, deux enfants",NM,PP,"9791039138475","https://static.bdbase.fr/images/books/75/couvertures/343175.webp",3,"Peter Parker marié et père de famille. Suite naturelle d’Ultimate Invasion.","https://www.panini.fr/shp_fra_fr/ultimate-spider-man-t01-mari-s-deux-enfants-fmd25035-fr02.html",false,"32"),
+    S(9,"Ultimate Black Panther – Tome 1 : Guerre et paix",NM,PP,"9791039139090",BF+"9791039139090_1_75.jpg",2,"Le Wakanda de la Terre-6160 face à une menace venue d’Égypte."),
+    S(10,"Ultimate X-Men – Tome 1 : Les enfants de l’atome",NM,PP,"9791039138482",BF+"9791039138482_1_75.jpg",2,"Peach Momoko et Hisako Ichiki, ambiance horreur et folklore japonais."),
+    S(11,"Ultimates – Tome 2",NM,PP,"","",2,"Suite de Réparer le monde. Vérifier le titre et la disponibilité de l’édition française."),
+    S(12,"Ultimate Invasion",NM,PP,"","https://static.bdbase.fr/images/books/85/couvertures/335285.webp",1,"Hickman et Hitch. Point de départ de la Terre-6160.","",true),
+    S(13,"Ultimates : Réparer le monde",NM,PP,"9791039145510",BF+"9791039145510_1_75_1.jpg",1,"Iron Lad rassemble une équipe pour reconstruire le monde.","",true)
+  ];
+  var items=[],status="want",editId=null,coverData="",coverId=null;
+  var $=function(i){return document.getElementById(i)};
+  function load(){var r=null;try{r=localStorage.getItem(KEY)}catch(e){} try{items=r?JSON.parse(r):null}catch(e){items=null} if(!Array.isArray(items))items=JSON.parse(JSON.stringify(SEED))}
+  function save(){try{localStorage.setItem(KEY,JSON.stringify(items))}catch(e){alert("Impossible d’enregistrer : le stockage du navigateur est plein ou bloqué.")}}
+  function esc(s){return String(s==null?"":s).replace(/[&<>"']/g,function(c){return{"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]})}
+  function hue(s){var h=0;for(var i=0;i<s.length;i++)h=(h*31+s.charCodeAt(i))%360;return h}
+  function posterHTML(x){
+    var gen='<div class="gen"><b>'+esc(x.title.split(/[–:]/)[0].trim())+'</b><i>'+esc(x.cover?"":(x.tried?"Pas de couverture":"Recherche de la couverture…"))+'</i></div>';
+    var img=x.cover?'<img src="'+esc(x.cover)+'" alt="Couverture '+esc(x.title)+'" referrerpolicy="no-referrer" loading="lazy" onerror="window.__cv('+x.id+',this)">':"";
+    return gen+img}
+
+  function lookup(x,cb){
+    var q=x.isbn?"isbn:"+x.isbn:"intitle:"+x.title.replace(/[–:]/g," ")+(x.publisher?" inauthor:"+x.publisher:"");
+    fetch("https://www.googleapis.com/books/v1/volumes?maxResults=5&q="+encodeURIComponent(q)).then(function(r){return r.json()}).then(function(d){
+      var u="";(d.items||[]).some(function(it){var l=it.volumeInfo&&it.volumeInfo.imageLinks;if(l&&(l.thumbnail||l.smallThumbnail)){u=(l.thumbnail||l.smallThumbnail).replace(/^http:/,"https:").replace("&edge=curl","");return true}});
+      cb(u)}).catch(function(){cb("")})}
+  function autoCover(x,force){
+    if(!x||x.bought===undefined||(x.tried&&!force)||(x.cover&&!force))return;
+    x.tried=true;
+    lookup(x,function(u){if(u){x.cover=u}save();render()})}
+  window.__cv=function(id,img){
+    var x=items.filter(function(i){return i.id===id})[0];
+    if(img&&img.remove)img.remove();
+    if(x&&x.cover&&x.cover.indexOf("data:")!==0){var had=x.tried;x.cover="";if(!had){x.tried=false;autoCover(x)}else{save();render()}}};
+  function autoAll(){items.forEach(function(x,i){if(!x.cover&&!x.tried)setTimeout(function(){autoCover(x)},i*250)})}
+  function render(){
+    var want=items.filter(function(x){return !x.bought}),own=items.length-want.length;
+    var tot=want.reduce(function(s,x){return s+(parseFloat(x.price)||0)},0);
+    $("stats").textContent=want.length+" à acheter · "+own+" en collection"+(tot?" · "+tot.toFixed(0)+" € déjà chiffrés":"");
+    var q=$("q").value.trim().toLowerCase(),uni=$("uni").value,sort=$("sort").value;
+    var v=items.filter(function(x){
+      if(status==="want"&&x.bought)return false;if(status==="owned"&&!x.bought)return false;
+      if(uni&&x.universe!==uni)return false;
+      return !q||(x.title+" "+x.author+" "+x.publisher).toLowerCase().indexOf(q)>-1});
+    v.sort(function(a,b){if(sort==="title")return a.title.localeCompare(b.title,"fr");if(sort==="new")return b.id-a.id;return(b.prio-a.prio)||(a.id-b.id)});
+    if(!v.length){$("list").innerHTML='<div class="empty">Rien ici pour l’instant. Touche « + Ajouter » pour commencer.</div>';return}
+    var PL={3:"Haute",2:"Moyenne",1:"Basse"};
+    $("list").innerHTML=v.map(function(x){
+      return '<div class="card'+(x.bought?' owned':'')+'" data-id="'+x.id+'"><button class="poster" data-a="view" aria-label="Détails : '+esc(x.title)+'">'+posterHTML(x)
+      +(x.bought?'<span class="done">Acquis</span>':(x.prio===3?'<span class="tag">Prioritaire</span>':''))+'</button><h3>'+esc(x.title)+'</h3><div class="meta">'+esc(x.universe)+(x.publisher?' – '+esc(x.publisher):'')+'</div></div>'}).join("")}
+  function openView(id){
+    var x=items.filter(function(i){return i.id===id})[0];if(!x)return;
+    $("viewBody").innerHTML='<div class="det" data-id="'+id+'"><div class="poster">'+posterHTML(x)+'</div><div><h2 style="margin:0 0 6px;font-size:20px">'+esc(x.title)+'</h2><p class="meta">'+esc(x.universe)+(x.publisher?' – '+esc(x.publisher):'')+'</p>'
+      +(x.author?'<p>'+esc(x.author)+'</p>':'')+(x.price?'<p>'+esc(String(x.price).replace(".",","))+' €</p>':'')+(x.isbn?'<p class="meta">ISBN '+esc(x.isbn)+'</p>':'')
+      +(x.note?'<p>'+esc(x.note)+'</p>':'')+(/^https?:\/\//.test(x.link)?'<p><a href="'+esc(x.link)+'" target="_blank" rel="noopener">Fiche du livre</a></p>':'')+'</div></div>'
+      +'<div class="row" data-id="'+id+'"><button data-a="toggle">'+(x.bought?'Remettre à acheter':'Je l’ai acheté')+'</button><button class="ghost" data-a="cover">'+(x.cover?'Changer la couverture':'Ajouter la couverture')+'</button><button class="ghost" data-a="edit">Modifier</button><button class="ghost danger" data-a="del">Supprimer</button><button class="ghost" data-a="close">Fermer</button></div>';
+    if(!$("dView").open)$("dView").showModal()}
+  function openForm(x){
+    editId=x?x.id:null;coverData=x&&x.cover&&x.cover.indexOf("data:")===0?x.cover:"";
+    $("fTitle").textContent=x?"Modifier le comic":"Ajouter un comic";
+    var m={t:"title",u:"universe",p:"prio",a:"author",e:"publisher",pr:"price",i:"isbn",l:"link",n:"note"};
+    for(var k in m)$(k).value=x?x[m[k]]:(k==="p"?"2":k==="u"?"DC":"");
+    $("cu").value=x&&!coverData?x.cover:"";$("cf").value="";
+    $("dForm").showModal()}
+  function resize(file,cb){
+    var r=new FileReader();r.onload=function(){var im=new Image();im.onload=function(){
+      var w=Math.min(360,im.width),h=Math.round(im.height*w/im.width),c=document.createElement("canvas");c.width=w;c.height=h;c.getContext("2d").drawImage(im,0,0,w,h);cb(c.toDataURL("image/jpeg",.82))};im.src=r.result};r.readAsDataURL(file)}
+  $("cf").onchange=function(){var f=this.files[0];if(f)resize(f,function(d){coverData=d;$("cu").value=""})};
+  $("save").onclick=function(){
+    var t=$("t").value.trim();if(!t){$("t").focus();return}
+    var d={title:t,universe:$("u").value,prio:parseInt($("p").value,10),author:$("a").value.trim(),publisher:$("e").value.trim(),price:$("pr").value,isbn:$("i").value.trim(),link:$("l").value.trim(),note:$("n").value.trim(),cover:$("cu").value.trim()||coverData};
+    if(editId){items.forEach(function(x){if(x.id===editId)Object.assign(x,d)})}else{d.id=Date.now();d.bought=false;items.push(d)}
+    save();$("dForm").close();render();autoAll()};
+  $("cancel").onclick=function(){$("dForm").close()};
+  $("add").onclick=function(){openForm(null)};
+  $("list").onclick=function(e){var b=e.target.closest("[data-a=view]");if(b)openView(parseInt(b.closest(".card").dataset.id,10))};
+  $("viewBody").onclick=function(e){
+    var b=e.target.closest("button[data-a]");if(!b)return;
+    var id=parseInt(b.closest("[data-id]").dataset.id,10),x=items.filter(function(i){return i.id===id})[0],a=b.dataset.a;
+    if(a==="close"){$("dView").close()}
+    else if(a==="toggle"){x.bought=!x.bought;save();$("dView").close();render()}
+    else if(a==="del"){if(confirm("Supprimer « "+x.title+" » de la liste ?")){items=items.filter(function(i){return i.id!==id});save();$("dView").close();render()}}
+    else if(a==="edit"){$("dView").close();openForm(x)}
+    else if(a==="cover"){coverId=id;$("qf").click()}};
+  $("qf").onchange=function(){var f=this.files[0],id=coverId;this.value="";if(!f)return;resize(f,function(d){items.forEach(function(x){if(x.id===id)x.cover=d});save();render();openView(id)})};
+  ["dView","dForm"].forEach(function(id){$(id).addEventListener("click",function(e){if(e.target===this)this.close()})});
+  $("tabs").onclick=function(e){var b=e.target.closest("button[data-s]");if(!b)return;status=b.dataset.s;
+    Array.prototype.forEach.call($("tabs").children,function(c){c.setAttribute("aria-pressed",c===b)});render()};
+  $("q").oninput=render;$("uni").onchange=render;$("sort").onchange=render;
+  $("reset").onclick=function(){if(confirm("Remplacer ta liste par la liste de départ ? Tes ajouts et modifications seront perdus.")){items=JSON.parse(JSON.stringify(SEED));save();render()}};
+  load();render();autoAll();
+})();
+</script>
+</body>
+</html>
